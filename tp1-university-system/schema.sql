@@ -66,4 +66,17 @@ CREATE TABLE grades (
     coefficient       NUMERIC DEFAULT 1,
     evaluation_date   DATETIME,
     comments          TEXT
+
 );
+
+
+
+CREATE INDEX idx_student_departement ON students(departement_id);
+
+CREATE INDEX idx_course_professor ON courses(professor_id);
+
+CREATE INDEX idx_enrollement_student ON enrollements(student_id);
+
+CREATE INDEX idx_enrollement_course ON enrollemnents(course_id);
+
+CREATE INDEX idx_grades_enrollement ON grades(enrollement_id);
