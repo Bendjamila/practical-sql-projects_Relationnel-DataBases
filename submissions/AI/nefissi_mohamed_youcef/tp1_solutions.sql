@@ -103,7 +103,11 @@ create index idx_grades_enrollment on grades(enrollment_id);
 
 
 -- inserting data --
-
+INSERT INTO departments (department_name, building, budget, department_head, creation_date) VALUES
+('Computer Science', 'Building A', 500000.00, 'Dr. Alan Turing', '2010-09-01'),
+('Mathematics', 'Building B', 350000.00, 'Dr. Ada Lovelace', '2010-09-01'),
+('Physics', 'Building C', 400000.00, 'Dr. Marie Curie', '2011-09-01'),
+('Civil Engineering', 'Building D', 600000.00, 'Dr. Gustave Eiffel', '2012-09-01');
 
 INSERT INTO professors (last_name, first_name, email, phone, department_id, hire_date, salary, specialization) VALUES
 ('Belhadj', 'Youcef', 'y.belhadj@univ-alger.dz', '+213-555-0101', 1, '2015-08-15', 95000.00, 'Intelligence Artificielle'),
