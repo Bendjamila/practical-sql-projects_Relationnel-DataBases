@@ -65,3 +65,5 @@ SELECT d.department_id, d.department_name, AVG(p.salary) AS average_salary
 FROM professors p
 JOIN departments d ON p.department_id = d.department_id
 GROUP BY d.department_id, d.department_name;
+-- Q16
+
