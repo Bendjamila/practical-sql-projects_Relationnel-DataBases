@@ -76,4 +76,4 @@ INSERT INTO grades (enrollment_id, evaluation_type, grade, coefficient, evaluati
   (9, 'Exam', 14, 4, '29-1-2026'),
   (10, 'Project', 16, 5, '31-1-2026'),
   (11, 'Project', 15, 6, '24-1-2026'),
-  (12, 'Project', 17, 3, '18-12-2025');
+  (15, 'Project', 17, 3, '18-12-2025');
