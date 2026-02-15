@@ -39,7 +39,7 @@ INSERT INTO courses (course_code, course_name, description, credits, semester, d
   ('M101', 'ALG1', 'Algebra', 6, 1, 2, 4, 120),
   ('M102', 'LOG', 'Mathematical Logic', 5, 2, 2, 4, 130),
   ('ST101', 'ANA', 'Mathematical Analysis', 6, 1, 3, 5, 50),
-  ('ST102', 'PRST', 'Probabilities & Statistics', 5, 2, 6, 4, 100);
+  ('ST102', 'PRST', 'Probabilities & Statistics', 5, 2, 2, 6, 100);
 
 
 
