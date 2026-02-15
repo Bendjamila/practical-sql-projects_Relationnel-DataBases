@@ -1,6 +1,6 @@
 --departements
 INSERT INTO departments (department_name, building, budget, departmnt_head, creation_date) VALUES
-  ('Computer Sience', 'Building A', 500000, 'Mr. NESRAOUI', '15-06-2023'),
+  ('Computer Science', 'Building A', 500000, 'Mr. NESRAOUI', '15-06-2023'),
   ('Mathematics', 'Building B', 350000, 'Mrs. MEGUEDMI', '03-05-2013'),
   ('Physics', 'Building C', 400000, 'MR. MOUGARI', '13-07-2010'),
   ('Civil Engineering', 'Building D', 600000, 'MRS. FERHAH', '29-08-2011');
