@@ -132,7 +132,7 @@ HAVING COUNT(e.course_id) > 2;
 SELECT student_name, student_avg, department_avg
 FROM (
     SELECT s.student_id, s.department_id, s.first_name || ' ' || s.last_name AS student_name,
-        AVG(g.grade) AS student_avg
+        ROUND(AVG(g.grade),2) AS student_avg
     FROM students s
     JOIN enrollments e ON s.student_id = e.student_id
     JOIN grades g ON e.enrollment_id = g.enrollment_id
