@@ -1,3 +1,5 @@
+-- NOTE : we worked with SQLite
+
 CREATE TABLE departments (
     department_id   INTEGER PRIMARY KEY AUTOINCREMENT,
     department_name TEXT NOT NULL,
