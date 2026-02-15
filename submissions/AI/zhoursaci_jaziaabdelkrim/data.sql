@@ -1,5 +1,5 @@
 --departements
-INSERT INTO departments (department_name, building, budget, departemnt_head, creation_date) VALUES
+INSERT INTO departments (department_name, building, budget, departmnt_head, creation_date) VALUES
   ('Computer Sience', 'Building A', 500000, 'Mr. NESRAOUI', '15-06-2023'),
   ('Mathematics', 'Building B', 350000, 'Mrs. MEGUEDMI', '03-05-2013'),
   ('Physics', 'Building C', 400000, 'MR. MOUGARI', '13-07-2010'),
@@ -43,7 +43,7 @@ INSERT INTO courses (course_code, course_name, description, credits, semester, d
 
 
 
---enrollements
+--enrollments
 INSERT INTO enrollments (student_id, course_id, enrollment_date, academic_year, status) VALUES
   (1, 1, '13-01-2026', '2025-2026', 'In Progress'),
   (1, 2, '27-09-2025', '2025-2026', 'Passed'),
