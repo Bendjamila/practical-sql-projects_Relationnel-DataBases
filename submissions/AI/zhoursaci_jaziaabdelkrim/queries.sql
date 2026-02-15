@@ -160,7 +160,7 @@ WHERE enrollment_nb > (
     SELECT AVG(enrollments_count)
     FROM (
         SELECT COUNT(enrollment_id) AS enrollments_count
-        FROM enrollements
+        FROM enrollments
         GROUP BY course_id
     )
 );
