@@ -1,5 +1,9 @@
+-- UNIVERSITY DATABASE MANAGEMENT SYSTEM
+
 create database university_db;
 use university_db;
+
+-- TABLE DEFINITIONS
 
 create table departments (
     department_id int primary key auto_increment,
@@ -21,8 +25,8 @@ create table professors (
     salary decimal(10, 2),
     specialization varchar(100),
     foreign key(department_id) references departments(department_id)
-        on delete set null
-        on update cascade
+        on delete set null      -- Keep professor record even if department is deleted
+        on update cascade       -- Auto-update if department_id changes
 );
 
 create table students (
@@ -35,7 +39,7 @@ create table students (
     phone varchar(20),
     address TEXT,
     department_id INT,
-    level VARCHAR(20) CHECK (level IN ('L1', 'L2', 'L3', 'M1', 'M2')),
+    level VARCHAR(20) CHECK (level IN ('L1', 'L2', 'L3', 'M1', 'M2')),  -- Academic year constraint
     enrollment_date DATE DEFAULT (CURRENT_DATE),
     foreign key (department_id) references departments(department_id)
         on delete set null
@@ -47,17 +51,15 @@ create table courses (
     course_code varchar(10) UNIQUE NOT NULL,
     course_name varchar(150) NOT NULL,
     description TEXT,
-    credits INT NOT NULL CHECK (credits > 0),
+    credits INT NOT NULL CHECK (credits > 0),  -- Must have at least 1 credit
     semester INT CHECK (semester BETWEEN 1 AND 2),
     department_id INT,
     professor_id INT,
     max_capacity INT DEFAULT 30,
     foreign key (department_id) references departments(department_id)
-        on delete cascade
-        on update cascade,
+        on delete cascade,      -- Delete courses if department is deleted
     foreign key (professor_id) references professors(professor_id)
-        on delete set null
-        on update cascade
+        on delete set null      -- Keep course even if professor leaves
 );
 
 create table enrollments (
@@ -69,12 +71,10 @@ create table enrollments (
     status varchar(20) DEFAULT 'In Progress' 
         CHECK (status IN ('In Progress', 'Passed', 'Failed', 'Dropped')),
     foreign key (student_id) references students(student_id)
-        on delete cascade
-        on update cascade,
+        on delete cascade,      -- Remove enrollments if student is deleted
     foreign key (course_id) references courses(course_id)
-        on delete cascade
-        on update cascade,
-    UNIQUE KEY unique_enrollment (student_id, course_id, academic_year)
+        on delete cascade,
+    UNIQUE KEY unique_enrollment (student_id, course_id, academic_year)  -- Prevent duplicate enrollments in same year
 );
 
 create table grades (
@@ -82,20 +82,22 @@ create table grades (
     enrollment_id int not null,
     evaluation_type varchar(30) 
         CHECK (evaluation_type IN ('Assignment', 'Lab', 'Exam', 'Project')),
-    grade decimal(5, 2) check (grade BETWEEN 0 AND 20),
-    coefficient decimal(3, 2) DEFAULT 1.00,
+    grade decimal(5, 2) check (grade BETWEEN 0 AND 20),  -- French grading system (0-20)
+    coefficient decimal(3, 2) DEFAULT 1.00,  -- Weight of this evaluation
     evaluation_date DATE,
     comments TEXT,
     foreign key (enrollment_id) references enrollments(enrollment_id)
         on delete cascade
-        on update cascade
 );
 
+-- Performance indexes for frequently joined columns
 create index idx_student_department on students(department_id);
 create index idx_course_professor on courses(professor_id);
 create index idx_enrollment_student on enrollments(student_id);
 create index idx_enrollment_course on enrollments(course_id);
 create index idx_grades_enrollment on grades(enrollment_id);
+
+-- SAMPLE DATA
 
 insert into departments (department_name, building, budget, department_head, creation_date) values
 ('Computer Science', 'Building A', 500000.00, 'Dr. Ahmed Benali', '2010-09-01'),
@@ -161,10 +163,14 @@ insert into grades (enrollment_id, evaluation_type, grade, coefficient, evaluati
 (15, 'Exam', 12.00, 0.60, '2024-01-15', 'Satisfactory'),
 (15, 'Assignment', 14.00, 0.40, '2023-11-10', 'Good progress');
 
--- Q1. List all students with their main information (name, email, level)
-select last_name, first_name, email, level from students order by last_name,  first_name;
+-- Q1. List all students with their main information
+-- Simple selection with ordering by name
+select last_name, first_name, email, level 
+from students 
+order by last_name, first_name;
 
 -- Q2. Display all professors from the Computer Science department
+-- Uses subquery to find department_id, then filters professors
 select last_name, first_name, email, specialization
 from professors
 where department_id = (
@@ -175,41 +181,67 @@ where department_id = (
 order by last_name;
 
 -- Q3. Find all courses with more than 5 credits
-select course_code, course_name, credits from courses 
+-- Simple filtering with descending sort on credits
+select course_code, course_name, credits 
+from courses 
 where credits > 5
-order by credits Desc, course_name;
+order by credits DESC, course_name;
 
 -- Q4. List students enrolled in L3 level
-select  student_number, last_name, first_name, email from students 
+-- Direct filtering on level field
+select student_number, last_name, first_name, email 
+from students 
 where level = 'L3'
 order by last_name, first_name;
 
 -- Q5. Display courses from semester 1
-select course_code, course_name, credits, semester from courses
+-- Filter by semester number
+select course_code, course_name, credits, semester 
+from courses
 where semester = 1
 order by course_name;
 
 -- Q6. Display all courses with the professor's name
-select C.course_code, C.course_name, concat(P.last_name, ' ', P.first_name) as professor_name
+-- LEFT JOIN ensures courses without professors still appear
+-- CONCAT combines first and last names into single field
+select 
+    C.course_code, 
+    C.course_name, 
+    concat(P.last_name, ' ', P.first_name) as professor_name
 from courses C
 left join professors P on C.professor_id = P.professor_id
 order by C.course_name;
 
 -- Q7. List all enrollments with student name and course name
-select concat(S.last_name, ' ', S.first_name) as student_name, C.course_name, E.enrollment_date, E.status
+-- Joins three tables to combine enrollment, student, and course data
+select 
+    concat(S.last_name, ' ', S.first_name) as student_name, 
+    C.course_name, 
+    E.enrollment_date, 
+    E.status
 from enrollments E
 join students S on E.student_id = S.student_id
 join courses C on C.course_id = E.course_id
 order by E.enrollment_date;
 
 -- Q8. Display students with their department name
-select concat(S.last_name, ' ', S.first_name) as student_name, D.department_name, S.level
+-- Simple join to show which department each student belongs to
+select 
+    concat(S.last_name, ' ', S.first_name) as student_name, 
+    D.department_name, 
+    S.level
 from students S
 join departments D on S.department_id = D.department_id
 order by student_name;
 
 -- Q9. List grades with student name, course name, and grade obtained
-select concat(S.last_name, ' ', S.first_name) as student_name, C.course_name, G.evaluation_type, G.grade
+-- Four-table join: grades -> enrollments -> students and courses
+-- Shows complete picture of who got what grade in which course
+select 
+    concat(S.last_name, ' ', S.first_name) as student_name, 
+    C.course_name, 
+    G.evaluation_type, 
+    G.grade
 from grades G 
 join enrollments E on G.enrollment_id = E.enrollment_id
 join students S on E.student_id = S.student_id
@@ -217,14 +249,22 @@ join courses C on E.course_id = C.course_id
 order by G.grade desc, C.course_name;
 
 -- Q10. Display professors with the number of courses they teach
-select concat(P.last_name, ' ', P.first_name) as professor_name, count(C.course_id) as number_of_courses
+-- LEFT JOIN ensures professors with no courses appear with count of 0
+-- GROUP BY professor_name aggregates courses per professor
+select 
+    concat(P.last_name, ' ', P.first_name) as professor_name, 
+    count(C.course_id) as number_of_courses
 from professors P
 left join courses C on P.professor_id = C.professor_id
 group by professor_name
 order by number_of_courses desc, professor_name;
 
 -- Q11. Calculate the overall average grade for each student
-select concat(S.last_name, ' ', S.first_name) as student_name, round(avg(G.grade), 2) as average_grade
+-- Groups all grades by student and calculates their mean
+-- ROUND() limits decimal places for readability
+select 
+    concat(S.last_name, ' ', S.first_name) as student_name, 
+    round(avg(G.grade), 2) as average_grade
 from students S
 join enrollments E on s.student_id = E.student_id
 join grades g on E.enrollment_id = G.enrollment_id
@@ -232,32 +272,45 @@ group by S.student_id, S.last_name, S.first_name
 order by average_grade desc;
 
 -- Q12. Count the number of students per department
-select D.department_name, count(S.student_id) as student_count
+-- LEFT JOIN ensures departments with no students still show count of 0
+select 
+    D.department_name, 
+    count(S.student_id) as student_count
 from departments D
 left join students S on D.department_id = S.department_id
 group by D.department_id, D.department_name
 order by student_count desc;
 
 -- Q13. Calculate the total budget of all departments
+-- Simple aggregation across all rows
 select sum(budget) as total_budget
 from departments;
 
 -- Q14. Find the total number of courses per department
-select D.department_name, count(C.course_id) as course_count
+-- Counts courses offered by each department
+select 
+    D.department_name, 
+    count(C.course_id) as course_count
 from departments D
 left join courses C on D.department_id = C.department_id
 group by D.department_id, D.department_name
 order by course_count desc;
 
 -- Q15. Calculate the average salary of professors per department
-select D.department_name, round(avg(P.salary), 2) as average_salary
+-- Groups professors by department and finds mean salary
+select 
+    D.department_name, 
+    round(avg(P.salary), 2) as average_salary
 from departments D
 left join professors P on D.department_id = P.department_id
 group by D.department_id, D.department_name
 order by average_salary desc;
 
 -- Q16. Find the top 3 students with the best averages
-select concat(S.last_name, ' ', S.first_name) as student_name, round(avg(G.grade), 2) as average_grade
+-- Same as Q11 but limited to top 3 performers
+select 
+    concat(S.last_name, ' ', S.first_name) as student_name, 
+    round(avg(G.grade), 2) as average_grade
 from students S
 join enrollments E on S.student_id = E.student_id
 join grades G on E.enrollment_id = G.enrollment_id
@@ -266,18 +319,26 @@ order by average_grade desc
 limit 3;
 
 -- Q17. List courses with no enrolled students
-select C.course_code, C.course_name
+-- LEFT JOIN creates NULL for courses without enrollments
+-- WHERE filters to keep only those NULL rows
+select 
+    C.course_code, 
+    C.course_name
 from courses C
 left join enrollments E on C.course_id = E.course_id
 where E.enrollment_id is null
 order by C.course_code;
 
--- Q18. Display students who have passed all their courses (status = 'Passed')
-select concat(S.last_name, ' ', S.first_name) as student_name, count(E.course_id) as passed_courses_count
+-- Q18. Display students who have passed all their courses
+-- Logic: Count passed courses = count of all courses for that student
+-- HAVING clause filters groups after aggregation
+select 
+    concat(S.last_name, ' ', S.first_name) as student_name, 
+    count(E.course_id) as passed_courses_count
 from students S
 join enrollments E on S.student_id = E.student_id
 where E.status = 'Passed'
-group by S.student_id, S.last_name,S.first_name
+group by S.student_id, S.last_name, S.first_name
 having count(E.enrollment_id) = (
     select count(*) 
     from enrollments 
@@ -286,7 +347,10 @@ having count(E.enrollment_id) = (
 order by passed_courses_count desc;
 
 -- Q19. Find professors who teach more than 2 courses
-select concat(P.last_name, ' ', P.first_name) as professor_name, count(C.course_id) as courses_taught
+-- HAVING filters after grouping - only professors with >2 courses
+select 
+    concat(P.last_name, ' ', P.first_name) as professor_name, 
+    count(C.course_id) as courses_taught
 from professors P
 join courses C on P.professor_id = C.professor_id
 group by P.professor_id, P.last_name, P.first_name
@@ -294,7 +358,10 @@ having count(C.course_id) > 2
 order by courses_taught desc;
 
 -- Q20. List students enrolled in more than 2 courses
-select concat(S.last_name, ' ', S.first_name) as student_name, count(E.enrollment_id) as enrolled_courses_count
+-- Similar logic to Q19 but for students
+select 
+    concat(S.last_name, ' ', S.first_name) as student_name, 
+    count(E.enrollment_id) as enrolled_courses_count
 from students S
 join enrollments E on S.student_id = E.student_id
 group by S.student_id, S.first_name, S.last_name
@@ -302,8 +369,13 @@ having count(E.enrollment_id) > 2
 order by enrolled_courses_count desc;
 
 -- Q21. Find students with an average higher than their department's average
-select concat(S.last_name, ' ', S.first_name) as student_name, round(avg(G.grade), 2) as student_avg,
-(select round(avg(G2.grade), 2)
+-- Complex logic: For each student, calculate their average and compare
+-- to the average of all students in their department
+-- Uses correlated subquery in both SELECT and HAVING
+select 
+    concat(S.last_name, ' ', S.first_name) as student_name, 
+    round(avg(G.grade), 2) as student_avg,
+    (select round(avg(G2.grade), 2)
      from students S2
      join enrollments E2 on S2.student_id = E2.student_id
      join grades G2 on E2.enrollment_id = G2.enrollment_id
@@ -322,7 +394,11 @@ having avg(G.grade) > (
 order by student_avg desc;
 
 -- Q22. List courses with more enrollments than the average number of enrollments
-select C.course_name, count(E.enrollment_id) as enrollment_count
+-- Logic: First calculate average enrollments per course (subquery)
+-- Then filter courses that exceed this average
+select 
+    C.course_name, 
+    count(E.enrollment_id) as enrollment_count
 from courses C
 left join enrollments E on C.course_id = E.course_id
 group by C.course_id, C.course_name
@@ -337,14 +413,22 @@ having count(E.enrollment_id) > (
 order by enrollment_count desc;
 
 -- Q23. Display professors from the department with the highest budget
-select concat(P.last_name, ' ', P.first_name) as professor_name, D.department_name, D.budget
+-- Subquery finds max budget, outer query filters professors from that department
+select 
+    concat(P.last_name, ' ', P.first_name) as professor_name, 
+    D.department_name, 
+    D.budget
 from professors P
 join departments D on P.department_id = D.department_id
 where D.budget = (select max(budget) from departments)
 order by P.last_name;
 
 -- Q24. Find students with no grades recorded
-select  concat(S.last_name, ' ', S.first_name) as student_name, S.email
+-- Uses NOT IN subquery to find students whose ID doesn't appear
+-- in the list of student IDs that have grades
+select 
+    concat(S.last_name, ' ', S.first_name) as student_name, 
+    S.email
 from students S
 where S.student_id not in (
     select distinct E.student_id
@@ -354,7 +438,11 @@ where S.student_id not in (
 order by S.last_name;
 
 -- Q25. List departments with more students than the average
-select D.department_name, count(S.student_id) as student_count
+-- Similar to Q22: calculate average students per department,
+-- then show only departments exceeding that average
+select 
+    D.department_name, 
+    count(S.student_id) as student_count
 from departments D
 left join students S on D.department_id = S.department_id
 group by D.department_id, D.department_name
@@ -369,7 +457,11 @@ having count(S.student_id) > (
 order by student_count desc;
 
 -- Q26. Calculate the pass rate per course (grades >= 10/20)
-select C.course_name, count(G.grade_id) as total_grades,
+-- Uses CASE statement to count passed grades (>=10)
+-- Pass rate = (passed / total) * 100
+select 
+    C.course_name, 
+    count(G.grade_id) as total_grades,
     sum(case when G.grade >= 10 then 1 else 0 end) as passed_grades,
     round((sum(case when G.grade >= 10 then 1 else 0 end) / count(G.grade_id)) * 100, 2) as pass_rate_percentage
 from courses C
@@ -379,7 +471,10 @@ group by C.course_id, C.course_name
 order by pass_rate_percentage desc;
 
 -- Q27. Display student ranking by descending average
-select rank() over (order by avg(G.grade) desc) as `rank`,
+-- Uses window function RANK() to assign ranks based on average grade
+-- Handles ties by giving same rank to students with identical averages
+select 
+    rank() over (order by avg(G.grade) desc) as `rank`,
     concat(S.last_name, ' ', S.first_name) as student_name,
     round(avg(G.grade), 2) as average_grade
 from students S
@@ -389,7 +484,14 @@ group by S.student_id, S.last_name, S.first_name
 order by `rank`;
 
 -- Q28. Generate a report card for student with student_id = 1
-select C.course_name, G.evaluation_type, G.grade, G.coefficient, round(G.grade * G.coefficient, 2) as weighted_grade
+-- Shows all evaluations with weighted grades for a specific student
+-- weighted_grade = grade * coefficient (used to calculate final course grade)
+select 
+    C.course_name, 
+    G.evaluation_type, 
+    G.grade, 
+    G.coefficient, 
+    round(G.grade * G.coefficient, 2) as weighted_grade
 from grades G
 join enrollments E on G.enrollment_id = E.enrollment_id
 join courses C on E.course_id = C.course_id
@@ -397,14 +499,23 @@ where E.student_id = 1
 order by C.course_name, G.evaluation_date;
 
 -- Q29. Calculate teaching load per professor (total credits taught)
-select  concat(P.last_name, ' ', P.first_name) as professor_name, coalesce(sum(C.credits), 0) as total_credits
+-- Sums all credits from courses taught by each professor
+-- COALESCE handles professors with no courses (returns 0 instead of NULL)
+select 
+    concat(P.last_name, ' ', P.first_name) as professor_name, 
+    coalesce(sum(C.credits), 0) as total_credits
 from professors P
 left join courses C on P.professor_id = C.professor_id
 group by P.professor_id, P.last_name, P.first_name
 order by total_credits desc;
 
 -- Q30. Identify overloaded courses (enrollments > 80% of max capacity)
-select C.course_name, count(E.enrollment_id) as current_enrollments, C.max_capacity,
+-- Calculates percentage full for each course
+-- HAVING filters to show only courses over 80% capacity
+select 
+    C.course_name, 
+    count(E.enrollment_id) as current_enrollments, 
+    C.max_capacity,
     round((count(E.enrollment_id) / C.max_capacity) * 100, 2) as percentage_full
 from courses C
 left join enrollments E on C.course_id = E.course_id
