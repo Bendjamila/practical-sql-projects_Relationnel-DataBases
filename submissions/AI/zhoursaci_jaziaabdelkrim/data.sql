@@ -64,7 +64,7 @@ INSERT INTO enrollments (student_id, course_id, enrollment_date, academic_year, 
 
 
 --grades
-INSERT INTO grades (enrollment_id, evaluation_type, grade, coefficient, evaluation_date, comments) VALUES
+INSERT INTO grades (enrollment_id, evaluation_type, grade, coefficient, evaluation_date) VALUES
   (1, 'Assignment', 16, 4, '25-1-2026'),
   (2, 'Assignment', 13, 5, '17-1-2026'),
   (3, 'Assignment', 18, 6, '07-1-2026'),
