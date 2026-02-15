@@ -9,7 +9,7 @@ SELECT last_name, first_name, email, level FROM students;
 SELECT last_name, first_name, email, specialization 
 FROM professors p 
 JOIN departments d ON p.department_id = d.department_id
-WHERE d.department_name = "Computer Science";
+WHERE d.department_name = 'Computer Science';
 
 -- Q3
 SELECT course_code, course_name, credits
@@ -19,7 +19,7 @@ WHERE credits > 5;
 -- Q4
 SELECT student_number, last_name, first_name, email
 FROM students
-WHERE level = "L3";
+WHERE level = 'L3';
 
 -- Q5
 SELECT course_code, course_name, credits, semester
@@ -31,7 +31,7 @@ WHERE semester = 1;
 -- Q6
 SELECT c.course_code, c.course_name, p.last_name, p.first_name
 FROM courses c
-JOIN professors p ON c.professor_id = s.professor_id;
+JOIN professors p ON c.professor_id = p.professor_id;
 
 -- Q7
 SELECT s.last_name, s.first_name, c.course_name, e.enrollment_date, e.status
