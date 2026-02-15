@@ -6,7 +6,7 @@ CREATE DATABASE IF NOT EXISTS university_db;
 USE university_db;
 
 -- ========================
--- TABLES
+-- Tablessss
 -- ========================
 
 -- Departments table 
@@ -93,7 +93,7 @@ FOREIGN KEY(enrollment_id) REFERENCES enrollments(enrollment_id) ON DELETE CASCA
 );
 
 -- ========================
--- INDEXES
+-- Indexes
 -- ========================
 
 CREATE INDEX idx_student_department ON students(department_id);
@@ -101,9 +101,100 @@ CREATE INDEX idx_course_professor ON courses(professor_id);
 CREATE INDEX idx_enrollment_student ON enrollments(student_id);
 CREATE INDEX idx_enrollment_course ON enrollments(course_id);
 CREATE INDEX idx_grades_enrollment ON grades(enrollment_id);
+USE university_db;
 
 -- ========================
--- Now we have the 30 QUERIES
+-- Deps (4)
+-- ========================
+
+INSERT INTO departments (department_name, building, budget, department_head, creation_date) VALUES
+('Computer Science','Building A',500000,'Dr. Karim Bensalem','2005-09-01'),
+('Mathematics','Building B',350000,'Dr. Samira Belkacem','2004-09-01'),
+('Physics','Building C',400000,'Dr. Nabil Cherif','2006-09-01'),
+('Civil Engineering','Building D',600000,'Dr. Mourad Bouziane','2003-09-01');
+
+-- ========================
+-- Poffs (6)
+-- ========================
+
+INSERT INTO professors (last_name, first_name, email, phone, department_id, hire_date, salary, specialization) VALUES
+('Bensalem','Karim','karim.bensalem@uni.com','0550000001',1,'2015-09-01',90000,'Artificial Intelligence'),
+('Amrani','Sofia','sofia.amrani@uni.com','0550000002',1,'2017-09-01',85000,'Computer Networks'),
+('Khaldi','Yacine','yacine.khaldi@uni.com','0550000003',1,'2018-09-01',80000,'Databases'),
+('Belkacem','Samira','samira.belkacem@uni.com','0550000004',2,'2016-09-01',78000,'Algebra'),
+('Cherif','Nabil','nabil.cherif@uni.com','0550000005',3,'2014-09-01',92000,'Theoretical Physics'),
+('Bouziane','Mourad','mourad.bouziane@uni.com','0550000006',4,'2013-09-01',95000,'Structural Engineering');
+
+-- ========================
+-- Studs (8)
+-- ========================
+
+INSERT INTO students (student_number,last_name,first_name,date_of_birth,email,phone,address,department_id,level,enrollment_date) VALUES
+('CS001','Benali','Yasmine','2003-05-12','yasmine.benali@uni.com','0660000001','Algiers',1,'L2','2023-09-01'),
+('CS002','Kaci','Amine','2002-03-10','amine.kaci@uni.com','0660000002','Oran',1,'L3','2022-09-01'),
+('CS003','Bouzid','Sara','2001-07-22','sara.bouzid@uni.com','0660000003','Setif',1,'M1','2021-09-01'),
+('MA001','Rahmani','Nour','2003-11-02','nour.rahmani@uni.com','0660000004','Blida',2,'L2','2023-09-01'),
+('PH001','Hamdi','Karim','2002-09-15','karim.hamdi@uni.com','0660000005','Annaba',3,'L3','2022-09-01'),
+('CE001','Ziani','Lina','2001-12-30','lina.ziani@uni.com','0660000006','Tlemcen',4,'M1','2021-09-01'),
+('CS004','Ferhat','Rania','2003-04-18','rania.ferhat@uni.com','0660000007','Algiers',1,'L2','2023-09-01'),
+('MA002','Haddad','Omar','2002-01-08','omar.haddad@uni.com','0660000008','Oran',2,'L3','2022-09-01');
+
+-- ========================
+-- Courses (7)
+-- ========================
+
+INSERT INTO courses (course_code,course_name,description,credits,semester,department_id,professor_id,max_capacity) VALUES
+('CS101','Databases','Intro to DB systems',6,1,1,3,30),
+('CS102','Artificial Intelligence','Basics of AI',5,2,1,1,30),
+('CS103','Computer Networks','Network fundamentals',6,1,1,2,30),
+('MA101','Linear Algebra','Matrices and vectors',5,1,2,4,30),
+('PH101','Mechanics','Classical mechanics',6,2,3,5,30),
+('CE101','Structures I','Intro to structures',5,1,4,6,30),
+('CS201','Advanced Databases','Advanced SQL concepts',6,2,1,3,25);
+
+-- ========================
+-- Enrollements (15)
+-- ========================
+
+INSERT INTO enrollments (student_id,course_id,enrollment_date,academic_year,status) VALUES
+(1,1,'2024-09-10','2024-2025','In Progress'),
+(1,2,'2024-09-10','2024-2025','In Progress'),
+(2,1,'2024-09-10','2024-2025','Passed'),
+(2,3,'2024-09-10','2024-2025','Passed'),
+(3,2,'2023-09-10','2023-2024','Passed'),
+(3,7,'2024-09-10','2024-2025','In Progress'),
+(4,4,'2024-09-10','2024-2025','In Progress'),
+(5,5,'2024-09-10','2024-2025','Passed'),
+(6,6,'2023-09-10','2023-2024','Passed'),
+(7,1,'2024-09-10','2024-2025','In Progress'),
+(7,3,'2024-09-10','2024-2025','In Progress'),
+(8,4,'2023-09-10','2023-2024','Passed'),
+(2,7,'2024-09-10','2024-2025','In Progress'),
+(1,3,'2024-09-10','2024-2025','In Progress'),
+(5,3,'2024-09-10','2024-2025','Failed');
+
+-- ========================
+-- Grades (12)
+-- ========================
+
+INSERT INTO grades (enrollment_id,evaluation_type,grade,coefficient,evaluation_date,comments) VALUES
+(3,'Exam',15,2,'2025-01-10','good'),
+(4,'Project',17,1.5,'2025-01-15','very good'),
+(5,'Exam',14,2,'2024-01-10','good'),
+(8,'Exam',16,2,'2025-01-12','very good'),
+(9,'Project',18,2,'2024-01-15','excellent'),
+(12,'Exam',13,2,'2024-01-10','average'),
+(15,'Exam',10,2,'2025-01-12','pass'),
+(2,'Assignment',12,1,'2024-12-01','mid'),
+(6,'Lab',14,1,'2024-12-15','good'),
+(10,'Assignment',11,1,'2024-12-05','ok'),
+(11,'Lab',13,1,'2024-12-07','fine'),
+(1,'Assignment',12,1,'2024-11-20','intro');
+;
+
+
+-- ========================
+-- Now we have the 30 Queries
 -- ========================
 
 -- Q1 all students
@@ -197,11 +288,18 @@ LEFT JOIN enrollments e ON c.course_id=e.course_id
 WHERE e.enrollment_id IS NULL;
 
 -- Q18 students passed all courses
-SELECT CONCAT(s.last_name,' ',s.first_name) AS student_name, COUNT() AS passed_courses_count
+SELECT CONCAT(s.last_name,' ',s.first_name) AS student_name,
+       COUNT(e.enrollment_id) AS passed_courses_count
 FROM enrollments e
-JOIN students s ON e.student_id=s.student_id
-WHERE e.status='Passed'
+JOIN students s ON e.student_id = s.student_id
+WHERE e.status = 'Passed'
 GROUP BY s.student_id
+HAVING COUNT(e.enrollment_id) = (
+    SELECT COUNT(*)
+    FROM enrollments e2
+    WHERE e2.student_id = s.student_id
+);
+ s.student_id
 HAVING COUNT() = (SELECT COUNT(*) FROM enrollments e2 WHERE e2.student_id=s.student_id);
 
 -- Q19 prof >2 courses
@@ -212,24 +310,34 @@ GROUP BY p.professor_id
 HAVING COUNT(c.course_id) > 2;
 
 -- Q20 students >2 courses
-SELECT CONCAT(s.last_name,' ',s.first_name) AS student_name, COUNT() AS enrolled_courses_count
+SELECT CONCAT(s.last_name,' ',s.first_name) AS student_name,
+       COUNT(e.enrollment_id) AS enrolled_courses_count
 FROM enrollments e
-JOIN students s ON e.student_id=s.student_id
+JOIN students s ON e.student_id = s.student_id
 GROUP BY s.student_id
-HAVING COUNT() > 2;
+HAVING COUNT(e.enrollment_id) > 2;
 
--- Q21 student avg > dept avg (my fav!)
-SELECT CONCAT(s.last_name,' ',s.first_name) AS student_name, AVG(g.grade) AS student_avg,
-(SELECT AVG(g2.grade)
-FROM grades g2
-JOIN enrollments e2 ON g2.enrollment_id=e2.enrollment_id
-JOIN students s2 ON e2.student_id=s2.student_id
-WHERE s2.department_id=s.department_id) AS department_avg
-FROM grades g
-JOIN enrollments e ON g.enrollment_id=e.enrollment_id
-JOIN students s ON e.student_id=s.student_id
-GROUP BY s.student_id
-HAVING student_avg > department_avg;
+
+-- Q21 student avg > dept avg
+SELECT student_name, student_avg, department_avg
+FROM (
+    SELECT CONCAT(s.last_name,' ',s.first_name) AS student_name,
+           s.department_id,
+           AVG(g.grade) AS student_avg,
+           (
+               SELECT AVG(g2.grade)
+               FROM grades g2
+               JOIN enrollments e2 ON g2.enrollment_id = e2.enrollment_id
+               JOIN students s2 ON e2.student_id = s2.student_id
+               WHERE s2.department_id = s.department_id
+           ) AS department_avg
+    FROM grades g
+    JOIN enrollments e ON g.enrollment_id = e.enrollment_id
+    JOIN students s ON e.student_id = s.student_id
+    GROUP BY s.student_id
+) tmp
+WHERE student_avg > department_avg;
+
 
 -- Q22 courses > avg enroll
 SELECT c.course_name, COUNT(e.enrollment_id) AS enrollment_count
