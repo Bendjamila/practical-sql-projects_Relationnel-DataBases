@@ -1,75 +1,490 @@
 /* ============================================================
-   TP2 - Hospital Management System
-   File: tp2_solutions.sql
+   TP1 - University Management System
+   File: tp1_solutions.sql
    DB: MySQL 8+
    ============================================================ */
 
-DROP DATABASE IF EXISTS hospital_db;
-CREATE DATABASE hospital_db;
-USE hospital_db;
+DROP DATABASE IF EXISTS university_db;
+CREATE DATABASE university_db;
+USE university_db;
 
 /* ============================================================
-   1) TABLE: specialties
+   1) TABLE: departments
    ============================================================ */
-CREATE TABLE specialties (
-  specialty_id INT PRIMARY KEY AUTO_INCREMENT,
-  specialty_name VARCHAR(100) NOT NULL UNIQUE,
-  description TEXT,
-  consultation_fee DECIMAL(10,2) NOT NULL
+CREATE TABLE departments (
+  department_id INT PRIMARY KEY AUTO_INCREMENT,
+  department_name VARCHAR(100) NOT NULL,
+  building VARCHAR(50),
+  budget DECIMAL(12,2),
+  department_head VARCHAR(100),
+  creation_date DATE
 );
 
 /* ============================================================
-   2) TABLE: doctors
+   2) TABLE: professors
    ============================================================ */
-CREATE TABLE doctors (
-  doctor_id INT PRIMARY KEY AUTO_INCREMENT,
+CREATE TABLE professors (
+  professor_id INT PRIMARY KEY AUTO_INCREMENT,
   last_name VARCHAR(50) NOT NULL,
   first_name VARCHAR(50) NOT NULL,
   email VARCHAR(100) NOT NULL UNIQUE,
   phone VARCHAR(20),
-  specialty_id INT NOT NULL,
-  license_number VARCHAR(20) NOT NULL UNIQUE,
+  department_id INT NULL,
   hire_date DATE,
-  office VARCHAR(100),
-  active BOOLEAN DEFAULT TRUE,
-  CONSTRAINT fk_doctor_specialty
-    FOREIGN KEY (specialty_id) REFERENCES specialties(specialty_id)
-    ON DELETE RESTRICT
+  salary DECIMAL(10,2),
+  specialization VARCHAR(100),
+  CONSTRAINT fk_prof_department
+    FOREIGN KEY (department_id) REFERENCES departments(department_id)
+    ON DELETE SET NULL
     ON UPDATE CASCADE
 );
 
 /* ============================================================
-   3) TABLE: patients
+   3) TABLE: students
    ============================================================ */
-CREATE TABLE patients (
-  patient_id INT PRIMARY KEY AUTO_INCREMENT,
-  file_number VARCHAR(20) NOT NULL UNIQUE,
+CREATE TABLE students (
+  student_id INT PRIMARY KEY AUTO_INCREMENT,
+  student_number VARCHAR(20) NOT NULL UNIQUE,
   last_name VARCHAR(50) NOT NULL,
   first_name VARCHAR(50) NOT NULL,
-  date_of_birth DATE NOT NULL,
-  gender ENUM('M','F') NOT NULL,
-  blood_type VARCHAR(5),
-  email VARCHAR(100),
-  phone VARCHAR(20) NOT NULL,
+  date_of_birth DATE,
+  email VARCHAR(100) NOT NULL UNIQUE,
+  phone VARCHAR(20),
   address TEXT,
-  city VARCHAR(50),
-  province VARCHAR(50),
-  registration_date DATE DEFAULT (CURRENT_DATE),
-  insurance VARCHAR(100),
-  insurance_number VARCHAR(50),
-  allergies TEXT,
-  medical_history TEXT
+  department_id INT NULL,
+  level VARCHAR(20) NOT NULL,
+  enrollment_date DATE DEFAULT (CURRENT_DATE),
+  CONSTRAINT chk_students_level
+    CHECK (level IN ('L1','L2','L3','M1','M2')),
+  CONSTRAINT fk_student_department
+    FOREIGN KEY (department_id) REFERENCES departments(department_id)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE
 );
 
 /* ============================================================
-   4) TABLE: consultations
+   4) TABLE: courses
    ============================================================ */
-CREATE TABLE consultations (
-  consultation_id INT PRIMARY KEY AUTO_INCREMENT,
-  patient_id INT NOT NULL,
-  doctor_id INT NOT NULL,
-  consultation_date DATETIME NOT NULL,
-  reason TEXT NOT NULL,
-  diagnosis TEXT,
-  observations TEXT,
-  blood_pressure
+CREATE TABLE courses (
+  course_id INT PRIMARY KEY AUTO_INCREMENT,
+  course_code VARCHAR(10) NOT NULL UNIQUE,
+  course_name VARCHAR(150) NOT NULL,
+  description TEXT,
+  credits INT NOT NULL,
+  semester INT NOT NULL,
+  department_id INT NOT NULL,
+  professor_id INT NULL,
+  max_capacity INT DEFAULT 30,
+  CONSTRAINT chk_courses_credits CHECK (credits > 0),
+  CONSTRAINT chk_courses_semester CHECK (semester IN (1,2)),
+  CONSTRAINT fk_course_department
+    FOREIGN KEY (department_id) REFERENCES departments(department_id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT fk_course_professor
+    FOREIGN KEY (professor_id) REFERENCES professors(professor_id)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE
+);
+
+/* ============================================================
+   5) TABLE: enrollments
+   ============================================================ */
+CREATE TABLE enrollments (
+  enrollment_id INT PRIMARY KEY AUTO_INCREMENT,
+  student_id INT NOT NULL,
+  course_id INT NOT NULL,
+  enrollment_date DATE DEFAULT (CURRENT_DATE),
+  academic_year VARCHAR(9) NOT NULL,
+  status VARCHAR(20) DEFAULT 'In Progress',
+  CONSTRAINT chk_enroll_status
+    CHECK (status IN ('In Progress','Passed','Failed','Dropped')),
+  CONSTRAINT chk_academic_year_format
+    CHECK (academic_year REGEXP '^[0-9]{4}-[0-9]{4}$'),
+  CONSTRAINT fk_enroll_student
+    FOREIGN KEY (student_id) REFERENCES students(student_id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT fk_enroll_course
+    FOREIGN KEY (course_id) REFERENCES courses(course_id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT uq_student_course_year UNIQUE (student_id, course_id, academic_year)
+);
+
+/* ============================================================
+   6) TABLE: grades
+   ============================================================ */
+CREATE TABLE grades (
+  grade_id INT PRIMARY KEY AUTO_INCREMENT,
+  enrollment_id INT NOT NULL,
+  evaluation_type VARCHAR(30) NOT NULL,
+  grade DECIMAL(5,2) NOT NULL,
+  coefficient DECIMAL(3,2) DEFAULT 1.00,
+  evaluation_date DATE,
+  comments TEXT,
+  CONSTRAINT chk_eval_type
+    CHECK (evaluation_type IN ('Assignment','Lab','Exam','Project')),
+  CONSTRAINT chk_grade_range
+    CHECK (grade >= 0 AND grade <= 20),
+  CONSTRAINT fk_grade_enrollment
+    FOREIGN KEY (enrollment_id) REFERENCES enrollments(enrollment_id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+);
+
+/* ============================================================
+   REQUIRED INDEXES
+   ============================================================ */
+CREATE INDEX idx_student_department ON students(department_id);
+CREATE INDEX idx_course_professor ON courses(professor_id);
+CREATE INDEX idx_enrollment_student ON enrollments(student_id);
+CREATE INDEX idx_enrollment_course ON enrollments(course_id);
+CREATE INDEX idx_grades_enrollment ON grades(enrollment_id);
+
+/* ============================================================
+   TEST DATA INSERTS
+   ============================================================ */
+
+-- Departments (4)
+INSERT INTO departments (department_name, building, budget, department_head, creation_date) VALUES
+('Computer Science', 'Building A', 500000.00, 'Dr. Alan Turing', '2001-09-01'),
+('Mathematics',      'Building B', 350000.00, 'Dr. Emmy Noether', '1998-10-15'),
+('Physics',          'Building C', 400000.00, 'Dr. Marie Curie', '1995-03-20'),
+('Civil Engineering','Building D', 600000.00, 'Dr. Gustave Eiffel', '2005-01-10');
+
+-- Professors (6) (>=3 in CS, >=1 in each other dept)
+INSERT INTO professors (last_name, first_name, email, phone, department_id, hire_date, salary, specialization) VALUES
+('Smith',   'John',   'john.smith@uni.edu',   '+213600000001', 1, '2016-09-01', 5200.00, 'Databases'),
+('Johnson', 'Emily',  'emily.johnson@uni.edu','+213600000002', 1, '2018-02-15', 4900.00, 'Networks'),
+('Brown',   'David',  'david.brown@uni.edu',  '+213600000003', 1, '2014-11-10', 6100.00, 'AI'),
+('Garcia',  'Sofia',  'sofia.garcia@uni.edu', '+213600000004', 2, '2012-01-20', 5800.00, 'Algebra'),
+('Martin',  'Lucas',  'lucas.martin@uni.edu', '+213600000005', 3, '2010-06-05', 6300.00, 'Quantum Physics'),
+('Dupont',  'Claire', 'claire.dupont@uni.edu','+213600000006', 4, '2019-09-12', 4700.00, 'Structures');
+
+-- Students (8) mix L2/L3/M1 across departments
+INSERT INTO students (student_number, last_name, first_name, date_of_birth, email, phone, address, department_id, level, enrollment_date) VALUES
+('S2024-001','BoucENNA','Achref','2003-05-14','achref.boucenna@uni.edu','+213700000001','Algiers',1,'L3','2024-09-15'),
+('S2024-002','Kaci','Yasmine','2004-02-21','yasmine.kaci@uni.edu','+213700000002','Oran',1,'L2','2024-09-15'),
+('S2024-003','Benali','Omar','2003-11-02','omar.benali@uni.edu','+213700000003','Blida',2,'L3','2024-09-15'),
+('S2024-004','Saidi','Lina','2002-08-09','lina.saidi@uni.edu','+213700000004','Constantine',3,'M1','2024-09-15'),
+('S2024-005','Haddad','Nadir','2004-01-30','nadir.haddad@uni.edu','+213700000005','Setif',4,'L2','2024-09-15'),
+('S2023-006','Meziane','Sara','2003-03-18','sara.meziane@uni.edu','+213700000006','Tizi Ouzou',1,'M1','2023-09-15'),
+('S2023-007','Bensaid','Ilyes','2002-12-12','ilyes.bensaid@uni.edu','+213700000007','Annaba',2,'M1','2023-09-15'),
+('S2024-008','Kerboua','Meriem','2003-07-07','meriem.kerboua@uni.edu','+213700000008','Bejaia',3,'L3','2024-09-15');
+
+-- Courses (7) 5-6 credits, different semesters, assigned to professors
+INSERT INTO courses (course_code, course_name, description, credits, semester, department_id, professor_id, max_capacity) VALUES
+('CS101','Relational Databases','SQL, constraints, normalization',6,1,1,1,40),
+('CS102','Computer Networks','TCP/IP, routing, security basics',5,2,1,2,35),
+('CS201','Introduction to AI','Search, ML basics',6,2,1,3,30),
+('MA101','Linear Algebra','Vectors, matrices, eigenvalues',6,1,2,4,45),
+('PH101','Modern Physics','Relativity and quantum intro',5,1,3,5,30),
+('CE101','Statics','Forces, equilibrium, structures',6,1,4,6,40),
+('CS150','Programming Concepts','OOP, clean code, testing',5,1,1,2,50);
+
+-- Enrollments (15) mix 2024-2025 and 2023-2024 and statuses
+INSERT INTO enrollments (student_id, course_id, enrollment_date, academic_year, status) VALUES
+-- 2024-2025 (current)
+(1, 1, '2024-10-01','2024-2025','In Progress'),
+(1, 2, '2024-10-01','2024-2025','In Progress'),
+(1, 3, '2024-10-01','2024-2025','In Progress'),
+(2, 1, '2024-10-02','2024-2025','In Progress'),
+(2, 7, '2024-10-02','2024-2025','In Progress'),
+(3, 4, '2024-10-03','2024-2025','In Progress'),
+(4, 5, '2024-10-03','2024-2025','In Progress'),
+(5, 6, '2024-10-04','2024-2025','In Progress'),
+(8, 5, '2024-10-05','2024-2025','In Progress'),
+
+-- 2023-2024 (previous) with various statuses
+(6, 1, '2023-10-01','2023-2024','Passed'),
+(6, 2, '2023-10-01','2023-2024','Passed'),
+(6, 3, '2023-10-01','2023-2024','Failed'),
+(7, 4, '2023-10-02','2023-2024','Passed'),
+(7, 1, '2023-10-02','2023-2024','Dropped'),
+(8, 7, '2023-10-03','2023-2024','Passed');
+
+-- Grades (12) different eval types, coefficients, grades 10-18
+-- NOTE: enrollment_id values are auto-generated in insertion order above (1..15)
+INSERT INTO grades (enrollment_id, evaluation_type, grade, coefficient, evaluation_date, comments) VALUES
+(10,'Exam',      16.00, 2.00, '2024-01-20','Good exam performance'),
+(10,'Project',   15.50, 1.50, '2024-01-10','Solid project'),
+(11,'Exam',      14.00, 2.00, '2024-01-22','Good understanding'),
+(11,'Lab',       17.00, 1.00, '2023-12-15','Excellent labs'),
+(12,'Exam',      10.50, 2.00, '2024-01-25','Needs improvement'),
+(12,'Assignment',12.00, 1.00, '2023-12-05','Average assignment'),
+(13,'Exam',      18.00, 2.00, '2024-01-18','Excellent'),
+(13,'Project',   16.00, 1.00, '2024-01-05','Good project'),
+(15,'Exam',      15.00, 2.00, '2024-01-12','Nice'),
+(15,'Lab',       14.50, 1.00, '2023-12-01','Consistent'),
+(14,'Exam',      11.00, 2.00, '2024-01-14','Dropped later'),
+(14,'Assignment',10.00, 1.00, '2023-11-25','Early work');
+
+/* ============================================================
+   30 SQL QUERIES (Q1 .. Q30)
+   Replace/adjust if your queries.sql has different questions.
+   ============================================================ */
+
+-- Q1: List all departments ordered by budget (highest first)
+SELECT department_id, department_name, building, budget
+FROM departments
+ORDER BY budget DESC;
+
+-- Q2: List all professors with their department name
+SELECT p.professor_id, p.last_name, p.first_name, d.department_name
+FROM professors p
+LEFT JOIN departments d ON d.department_id = p.department_id
+ORDER BY d.department_name, p.last_name;
+
+-- Q3: Count professors per department
+SELECT d.department_name, COUNT(p.professor_id) AS professor_count
+FROM departments d
+LEFT JOIN professors p ON p.department_id = d.department_id
+GROUP BY d.department_id, d.department_name
+ORDER BY professor_count DESC;
+
+-- Q4: List students with department + level
+SELECT s.student_number, s.last_name, s.first_name, s.level, d.department_name
+FROM students s
+LEFT JOIN departments d ON d.department_id = s.department_id
+ORDER BY d.department_name, s.level, s.last_name;
+
+-- Q5: Count students per level
+SELECT level, COUNT(*) AS nb_students
+FROM students
+GROUP BY level
+ORDER BY level;
+
+-- Q6: List all courses with department + professor
+SELECT c.course_code, c.course_name, c.credits, c.semester,
+       d.department_name,
+       CONCAT(p.first_name,' ',p.last_name) AS professor
+FROM courses c
+JOIN departments d ON d.department_id = c.department_id
+LEFT JOIN professors p ON p.professor_id = c.professor_id
+ORDER BY c.semester, c.course_code;
+
+-- Q7: Courses that have no assigned professor
+SELECT course_code, course_name
+FROM courses
+WHERE professor_id IS NULL;
+
+-- Q8: Number of courses per department
+SELECT d.department_name, COUNT(c.course_id) AS course_count
+FROM departments d
+LEFT JOIN courses c ON c.department_id = d.department_id
+GROUP BY d.department_id, d.department_name
+ORDER BY course_count DESC;
+
+-- Q9: List enrollments (student + course + year + status)
+SELECT e.enrollment_id,
+       s.student_number,
+       CONCAT(s.first_name,' ',s.last_name) AS student,
+       c.course_code,
+       c.course_name,
+       e.academic_year,
+       e.status
+FROM enrollments e
+JOIN students s ON s.student_id = e.student_id
+JOIN courses c ON c.course_id = e.course_id
+ORDER BY e.academic_year DESC, s.student_number, c.course_code;
+
+-- Q10: Count enrollments per academic year
+SELECT academic_year, COUNT(*) AS total_enrollments
+FROM enrollments
+GROUP BY academic_year
+ORDER BY academic_year DESC;
+
+-- Q11: Students enrolled in more than 2 courses in 2024-2025
+SELECT s.student_number, CONCAT(s.first_name,' ',s.last_name) AS student,
+       COUNT(*) AS nb_courses
+FROM enrollments e
+JOIN students s ON s.student_id = e.student_id
+WHERE e.academic_year = '2024-2025'
+GROUP BY s.student_id, s.student_number, student
+HAVING COUNT(*) > 2
+ORDER BY nb_courses DESC;
+
+-- Q12: For each course (2024-2025), count enrolled students
+SELECT c.course_code, c.course_name, COUNT(e.enrollment_id) AS enrolled
+FROM courses c
+LEFT JOIN enrollments e
+  ON e.course_id = c.course_id AND e.academic_year = '2024-2025'
+GROUP BY c.course_id, c.course_code, c.course_name
+ORDER BY enrolled DESC, c.course_code;
+
+-- Q13: Courses that exceed or reach 80% capacity (2024-2025)
+SELECT c.course_code, c.course_name, c.max_capacity,
+       COUNT(e.enrollment_id) AS enrolled,
+       ROUND(100 * COUNT(e.enrollment_id) / c.max_capacity, 2) AS pct_full
+FROM courses c
+LEFT JOIN enrollments e
+  ON e.course_id = c.course_id AND e.academic_year = '2024-2025'
+GROUP BY c.course_id, c.course_code, c.course_name, c.max_capacity
+HAVING (COUNT(e.enrollment_id) / c.max_capacity) >= 0.80
+ORDER BY pct_full DESC;
+
+-- Q14: List grades with student + course + evaluation info
+SELECT g.grade_id, s.student_number, c.course_code, g.evaluation_type,
+       g.grade, g.coefficient, g.evaluation_date
+FROM grades g
+JOIN enrollments e ON e.enrollment_id = g.enrollment_id
+JOIN students s ON s.student_id = e.student_id
+JOIN courses c ON c.course_id = e.course_id
+ORDER BY g.evaluation_date DESC, s.student_number;
+
+-- Q15: Weighted average grade per enrollment
+SELECT e.enrollment_id,
+       s.student_number,
+       c.course_code,
+       ROUND(SUM(g.grade * g.coefficient) / NULLIF(SUM(g.coefficient),0), 2) AS weighted_avg
+FROM enrollments e
+JOIN students s ON s.student_id = e.student_id
+JOIN courses c ON c.course_id = e.course_id
+LEFT JOIN grades g ON g.enrollment_id = e.enrollment_id
+GROUP BY e.enrollment_id, s.student_number, c.course_code
+ORDER BY weighted_avg DESC;
+
+-- Q16: Students with average grade >= 14 (all years, across all their graded enrollments)
+SELECT s.student_number,
+       CONCAT(s.first_name,' ',s.last_name) AS student,
+       ROUND(SUM(g.grade*g.coefficient)/NULLIF(SUM(g.coefficient),0), 2) AS overall_avg
+FROM students s
+JOIN enrollments e ON e.student_id = s.student_id
+JOIN grades g ON g.enrollment_id = e.enrollment_id
+GROUP BY s.student_id, s.student_number, student
+HAVING overall_avg >= 14
+ORDER BY overall_avg DESC;
+
+-- Q17: For each department, average professor salary
+SELECT d.department_name,
+       ROUND(AVG(p.salary), 2) AS avg_salary,
+       MIN(p.salary) AS min_salary,
+       MAX(p.salary) AS max_salary
+FROM departments d
+LEFT JOIN professors p ON p.department_id = d.department_id
+GROUP BY d.department_id, d.department_name
+ORDER BY avg_salary DESC;
+
+-- Q18: Professors who teach more than 1 course
+SELECT p.professor_id,
+       CONCAT(p.first_name,' ',p.last_name) AS professor,
+       COUNT(c.course_id) AS nb_courses
+FROM professors p
+JOIN courses c ON c.professor_id = p.professor_id
+GROUP BY p.professor_id, professor
+HAVING nb_courses > 1
+ORDER BY nb_courses DESC;
+
+-- Q19: List students who have at least one enrollment with status 'Dropped'
+SELECT DISTINCT s.student_number, CONCAT(s.first_name,' ',s.last_name) AS student
+FROM students s
+JOIN enrollments e ON e.student_id = s.student_id
+WHERE e.status = 'Dropped'
+ORDER BY s.student_number;
+
+-- Q20: For each academic year, distribution of statuses
+SELECT academic_year, status, COUNT(*) AS cnt
+FROM enrollments
+GROUP BY academic_year, status
+ORDER BY academic_year DESC, cnt DESC;
+
+-- Q21: Top 3 best enrollments by weighted average (only enrollments with grades)
+SELECT
+  e.enrollment_id,
+  s.student_number,
+  c.course_code,
+  ROUND(SUM(g.grade*g.coefficient)/SUM(g.coefficient), 2) AS weighted_avg
+FROM enrollments e
+JOIN students s ON s.student_id = e.student_id
+JOIN courses c ON c.course_id = e.course_id
+JOIN grades g ON g.enrollment_id = e.enrollment_id
+GROUP BY e.enrollment_id, s.student_number, c.course_code
+ORDER BY weighted_avg DESC
+LIMIT 3;
+
+-- Q22: For each course, average grade (weighted) across all students (based on grades)
+SELECT c.course_code,
+       ROUND(SUM(g.grade*g.coefficient)/NULLIF(SUM(g.coefficient),0), 2) AS course_avg
+FROM courses c
+JOIN enrollments e ON e.course_id = c.course_id
+JOIN grades g ON g.enrollment_id = e.enrollment_id
+GROUP BY c.course_id, c.course_code
+ORDER BY course_avg DESC;
+
+-- Q23: Students not enrolled in any course in 2024-2025
+SELECT s.student_number, CONCAT(s.first_name,' ',s.last_name) AS student
+FROM students s
+LEFT JOIN enrollments e
+  ON e.student_id = s.student_id AND e.academic_year = '2024-2025'
+WHERE e.enrollment_id IS NULL
+ORDER BY s.student_number;
+
+-- Q24: Courses with zero enrollments in 2024-2025
+SELECT c.course_code, c.course_name
+FROM courses c
+LEFT JOIN enrollments e
+  ON e.course_id = c.course_id AND e.academic_year = '2024-2025'
+WHERE e.enrollment_id IS NULL
+ORDER BY c.course_code;
+
+-- Q25: Students with at least 2 enrollments in 2023-2024
+SELECT s.student_number, CONCAT(s.first_name,' ',s.last_name) AS student, COUNT(*) AS nb
+FROM students s
+JOIN enrollments e ON e.student_id = s.student_id
+WHERE e.academic_year = '2023-2024'
+GROUP BY s.student_id, s.student_number, student
+HAVING nb >= 2
+ORDER BY nb DESC;
+
+-- Q26: For each student, number of passed courses (all years)
+SELECT s.student_number,
+       CONCAT(s.first_name,' ',s.last_name) AS student,
+       SUM(CASE WHEN e.status = 'Passed' THEN 1 ELSE 0 END) AS passed_count
+FROM students s
+LEFT JOIN enrollments e ON e.student_id = s.student_id
+GROUP BY s.student_id, s.student_number, student
+ORDER BY passed_count DESC;
+
+-- Q27: For each department, count students and professors
+SELECT d.department_name,
+       COUNT(DISTINCT s.student_id) AS nb_students,
+       COUNT(DISTINCT p.professor_id) AS nb_professors
+FROM departments d
+LEFT JOIN students s ON s.department_id = d.department_id
+LEFT JOIN professors p ON p.department_id = d.department_id
+GROUP BY d.department_id, d.department_name
+ORDER BY nb_students DESC, nb_professors DESC;
+
+-- Q28: List students with their total enrolled credits for 2024-2025 (only In Progress)
+SELECT s.student_number,
+       CONCAT(s.first_name,' ',s.last_name) AS student,
+       COALESCE(SUM(c.credits),0) AS total_credits
+FROM students s
+LEFT JOIN enrollments e
+  ON e.student_id = s.student_id
+  AND e.academic_year = '2024-2025'
+  AND e.status = 'In Progress'
+LEFT JOIN courses c ON c.course_id = e.course_id
+GROUP BY s.student_id, s.student_number, student
+ORDER BY total_credits DESC;
+
+-- Q29: Rank students by overall weighted average (based on all their grades)
+SELECT
+  s.student_number,
+  CONCAT(s.first_name,' ',s.last_name) AS student,
+  ROUND(SUM(g.grade*g.coefficient)/NULLIF(SUM(g.coefficient),0), 2) AS overall_avg,
+  DENSE_RANK() OVER (
+    ORDER BY SUM(g.grade*g.coefficient)/NULLIF(SUM(g.coefficient),0) DESC
+  ) AS rank_pos
+FROM students s
+JOIN enrollments e ON e.student_id = s.student_id
+JOIN grades g ON g.enrollment_id = e.enrollment_id
+GROUP BY s.student_id, s.student_number, student
+ORDER BY rank_pos, s.student_number;
+
+-- Q30: Find the department with the highest total budget (single row)
+SELECT department_id, department_name, budget
+FROM departments
+ORDER BY budget DESC
+LIMIT 1;
