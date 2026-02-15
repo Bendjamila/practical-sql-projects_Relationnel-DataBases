@@ -1,0 +1,75 @@
+/* ============================================================
+   TP2 - Hospital Management System
+   File: tp2_solutions.sql
+   DB: MySQL 8+
+   ============================================================ */
+
+DROP DATABASE IF EXISTS hospital_db;
+CREATE DATABASE hospital_db;
+USE hospital_db;
+
+/* ============================================================
+   1) TABLE: specialties
+   ============================================================ */
+CREATE TABLE specialties (
+  specialty_id INT PRIMARY KEY AUTO_INCREMENT,
+  specialty_name VARCHAR(100) NOT NULL UNIQUE,
+  description TEXT,
+  consultation_fee DECIMAL(10,2) NOT NULL
+);
+
+/* ============================================================
+   2) TABLE: doctors
+   ============================================================ */
+CREATE TABLE doctors (
+  doctor_id INT PRIMARY KEY AUTO_INCREMENT,
+  last_name VARCHAR(50) NOT NULL,
+  first_name VARCHAR(50) NOT NULL,
+  email VARCHAR(100) NOT NULL UNIQUE,
+  phone VARCHAR(20),
+  specialty_id INT NOT NULL,
+  license_number VARCHAR(20) NOT NULL UNIQUE,
+  hire_date DATE,
+  office VARCHAR(100),
+  active BOOLEAN DEFAULT TRUE,
+  CONSTRAINT fk_doctor_specialty
+    FOREIGN KEY (specialty_id) REFERENCES specialties(specialty_id)
+    ON DELETE RESTRICT
+    ON UPDATE CASCADE
+);
+
+/* ============================================================
+   3) TABLE: patients
+   ============================================================ */
+CREATE TABLE patients (
+  patient_id INT PRIMARY KEY AUTO_INCREMENT,
+  file_number VARCHAR(20) NOT NULL UNIQUE,
+  last_name VARCHAR(50) NOT NULL,
+  first_name VARCHAR(50) NOT NULL,
+  date_of_birth DATE NOT NULL,
+  gender ENUM('M','F') NOT NULL,
+  blood_type VARCHAR(5),
+  email VARCHAR(100),
+  phone VARCHAR(20) NOT NULL,
+  address TEXT,
+  city VARCHAR(50),
+  province VARCHAR(50),
+  registration_date DATE DEFAULT (CURRENT_DATE),
+  insurance VARCHAR(100),
+  insurance_number VARCHAR(50),
+  allergies TEXT,
+  medical_history TEXT
+);
+
+/* ============================================================
+   4) TABLE: consultations
+   ============================================================ */
+CREATE TABLE consultations (
+  consultation_id INT PRIMARY KEY AUTO_INCREMENT,
+  patient_id INT NOT NULL,
+  doctor_id INT NOT NULL,
+  consultation_date DATETIME NOT NULL,
+  reason TEXT NOT NULL,
+  diagnosis TEXT,
+  observations TEXT,
+  blood_pressure
