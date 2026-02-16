@@ -144,7 +144,7 @@ CREATE TABLE prescription_details (
 );
 
 -- =========================
--- Indexes (required)
+-- Indexes
 -- =========================
 CREATE INDEX idx_patients_name ON patients(last_name, first_name);
 CREATE INDEX idx_consult_date ON consultations(consultation_date);
@@ -158,6 +158,7 @@ CREATE INDEX idx_pres_consult ON prescriptions(consultation_id);
 -- =========================
 
 -- Specialties (6)
+
 INSERT INTO specialties (specialty_name, description, consultation_fee) VALUES
 ('General Medicine','Primary care and internal medicine',1500.00),
 ('Cardiology','Heart and vascular specialty',3000.00),
@@ -167,6 +168,7 @@ INSERT INTO specialties (specialty_name, description, consultation_fee) VALUES
 ('Gynecology','Women''s reproductive health',2200.00);
 
 -- Doctors (6) - one per specialty
+
 INSERT INTO doctors (last_name, first_name, email, phone, specialty_id, license_number, hire_date, office, active) VALUES
 ('Smith','John','john.smith@hospital.uk','+44-20-7000-1101',1,'LIC-GB-1001','2012-04-01','Room 101',TRUE),
 ('Martin','Claire','claire.martin@hospital.fr','+33-1-4000-2101',2,'LIC-FR-2001','2010-06-15','Cardio 2',TRUE),
@@ -176,6 +178,7 @@ INSERT INTO doctors (last_name, first_name, email, phone, specialty_id, license_
 ('Moreau','Luc','luc.moreau@hospital.fr','+33-1-4000-2103',6,'LIC-FR-2003','2016-01-30','Gynae 1',TRUE);
 
 -- Patients (8) - varied ages, blood types, some with allergies, some with insurance
+
 INSERT INTO patients (file_number, last_name, first_name, date_of_birth, gender, blood_type, email, phone, address, city, province, registration_date, insurance, insurance_number, allergies, medical_history) VALUES
 ('P2025001','Watson','Alice','2018-06-10','F','A+','alice.watson@example.com','+44-20-8000-3001','10 Downing St','London','Greater London','2025-01-10','HealthPlus','HP-1001','Peanuts','No chronic disease'),
 ('P2025002','Clark','Thomas','1985-02-14','M','O-','thomas.clark@example.com','+44-20-8000-3002','22 Baker St','London','Greater London','2024-11-20',NULL,NULL,NULL,'Hypertension'),
@@ -187,6 +190,7 @@ INSERT INTO patients (file_number, last_name, first_name, date_of_birth, gender,
 ('P2025008','Petit','Marc','1945-01-11','M','O+','marc.petit@example.fr','+33-1-5000-4005','60 Boulevard','Nice','Provence-Alpes-Côte d''Azur','2023-06-18',NULL,NULL,'Aspirin','Chronic heart disease');
 
 -- Medications (10) - variety of forms, prices, stocks, some expiring soon
+
 INSERT INTO medications (medication_code, commercial_name, generic_name, form, dosage, manufacturer, unit_price, available_stock, minimum_stock, expiration_date, prescription_required, reimbursable) VALUES
 ('MED-001','Paracetamol 500mg','Paracetamol','Tablet','500mg','PharmaUK',20.00,200,50,'2026-12-31',FALSE,TRUE),
 ('MED-002','Amoxicillin 500mg','Amoxicillin','Capsule','500mg','PharmaFR',180.00,80,30,'2026-08-01',TRUE,FALSE),
@@ -200,7 +204,7 @@ INSERT INTO medications (medication_code, commercial_name, generic_name, form, d
 ('MED-010','Vitamin D 1000IU','Cholecalciferol','Tablet','1000IU','NutriHealth',75.00,300,50,'2029-06-30',FALSE,TRUE);
 
 -- Consultations (8) - mix of completed and scheduled, different dates, some paid
--- We'll set amount equal to specialty.consultation_fee for simplicity, with minor adjustments
+
 INSERT INTO consultations (patient_id, doctor_id, consultation_date, reason, diagnosis, observations, blood_pressure, temperature, weight, height, status, amount, paid) VALUES
 (1,3,'2025-01-05 09:30:00','Routine pediatric check','Well child','All normal','100/65','36.50',15.5,1.02,'Completed',1200.00,TRUE),
 (2,1,'2025-01-12 11:00:00','Chest pain','Angina suspected','ECG done','130/85','37.00',82.0,1.78,'Completed',3000.00,TRUE),
@@ -212,6 +216,7 @@ INSERT INTO consultations (patient_id, doctor_id, consultation_date, reason, dia
 (8,6,'2025-04-10 10:00:00','Post-menopausal check','Routine','All OK','125/80','36.70',72.0,1.68,'Scheduled',2200.00,FALSE);
 
 -- Prescriptions (7) - linked to consultations (use consultation ids 1..8 above)
+
 INSERT INTO prescriptions (consultation_id, prescription_date, treatment_duration, general_instructions) VALUES
 (1,'2025-01-05 10:00:00',7,'Take as directed. Return if fever.'),
 (2,'2025-01-12 11:30:00',14,'Rest and follow-up in 2 weeks.'),
@@ -222,8 +227,6 @@ INSERT INTO prescriptions (consultation_id, prescription_date, treatment_duratio
 (2,'2025-01-12 11:35:00',7,'Short course for pain management.');
 
 -- Prescription Details (12) - multiple meds per prescription with computed total_price
--- We'll compute total_price = quantity * unit_price (based on medication list above)
--- Note: medication_id values correspond to insertion order above (1..10)
 
 INSERT INTO prescription_details (prescription_id, medication_id, quantity, dosage_instructions, duration, total_price) VALUES
 (1,1,10,'1 tablet every 6 hours if needed',7,10 * 20.00),
