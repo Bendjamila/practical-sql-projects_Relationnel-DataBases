@@ -1,5 +1,5 @@
 -- ============================================
--- University Database Project
+-- TP1: University Management System
 -- ============================================
 
 
